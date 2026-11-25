@@ -29,7 +29,7 @@ main{max-width:760px;margin:auto;padding:16px 14px 60px}.view{display:none}.view
 <button class="primary" id="calculate">Calcular quantidade</button><div id="calcResult" class="result hidden" aria-live="polite"></div>
 <p class="muted" style="margin-top:12px">O cálculo informa apenas a quantidade matemática de princípio ativo indicada pela concentração e pelo volume. Não recomenda dose nem frequência.</p>
 </div>
-<div class="card"><h2>Projeção ao longo do período</h2><p class="muted">O gráfico começa com uma curva genérica em ng/dL, calculada por um modelo farmacocinético simplificado para a formulação, quantidade e intervalo informados. Conforme exames forem adicionados, a curva poderá ser ajustada gradualmente. A estimativa genérica não é uma previsão individual nem substitui exames.</p><div class="chartwrap" style="padding:8px"><svg id="projectionSvg" viewBox="0 0 700 300" role="img" aria-label="Gráfico comparativo de acumulação e vales farmacocinéticos dos ésteres" style="width:100%;height:auto;display:block"></svg></div><div id="projectionLegend" class="grid" style="margin-top:12px"></div><div id="projectionStatus" class="muted" style="margin-top:10px"></div><div id="stabilityTable" style="margin-top:12px"></div></div><div class="card"><h2>Registro de aplicação</h2><div class="grid"><div class="field"><label>Data</label><input id="appDate" type="date"></div><div class="field"><label>Horário</label><input id="appTime" type="time" value="12:00"></div></div><div class="field"><label>Observações (opcional)</label><input id="appNote" placeholder="Lote, local, observações..."></div><button class="secondary" id="saveApp">Salvar registro</button><div id="appList" class="list" style="margin-top:12px"></div></div>
+<div class="card"><h2>Projeção ao longo do período</h2><p class="muted">O gráfico mostra a concentração estimada de testosterona em <b>ng/dL</b> para o éster e a dose informados, usando um modelo farmacocinético simplificado (meia-vida + tempo até o pico). A curva considera aplicações repetidas no intervalo informado. Esta é uma estimativa genérica — não é previsão individual e não substitui exames laboratoriais.</p><div class="chartwrap" style="padding:8px"><svg id="projectionSvg" viewBox="0 0 700 300" role="img" aria-label="Projeção de concentração de testosterona em ng/dL" style="width:100%;height:auto;display:block"></svg></div><div id="projectionLegend" class="grid" style="margin-top:12px"></div><div id="projectionStatus" class="muted" style="margin-top:10px"></div><div id="stabilityTable" style="margin-top:12px"></div></div><div class="card"><h2>Registro de aplicação</h2><div class="grid"><div class="field"><label>Data</label><input id="appDate" type="date"></div><div class="field"><label>Horário</label><input id="appTime" type="time" value="12:00"></div></div><div class="field"><label>Observações (opcional)</label><input id="appNote" placeholder="Lote, local, observações..."></div><button class="secondary" id="saveApp">Salvar registro</button><div id="appList" class="list" style="margin-top:12px"></div></div>
 </section>
 <section class="view" id="labs">
 <div class="card"><h2>Adicionar exame laboratorial</h2><div class="grid"><div class="field"><label>Data da coleta</label><input id="labDate" type="date"></div><div class="field"><label>Horário</label><input id="labTime" type="time"></div></div>
@@ -44,8 +44,7 @@ main{max-width:760px;margin:auto;padding:16px 14px 60px}.view{display:none}.view
 <section class="view" id="model">
 <div class="card"><h2>Modelo farmacocinético</h2><div class="notice">A curva inicial é uma simulação genérica baseada em parâmetros publicados quando disponíveis e em aproximações explicitamente identificadas quando os dados são limitados. Ela não prevê com precisão a concentração de uma pessoa. Exames seriados, com horário e relação com as aplicações, poderão ajustar o modelo individual.</div><p class="muted">O TestoLab separará três tipos de informação:</p>
 <div class="item"><div><b>Dados científicos</b><small>Parâmetros publicados por éster e formulação, com fonte e faixa de incerteza.</small></div></div><div class="notice">A conversão direta de mg aplicados em ng/dL não é universal: depende de absorção, via, intervalo, SHBG, metabolismo e momento da coleta. A curva individual só será liberada após validação com exames seriados e registros de aplicação sincronizados.</div>
-<div class="item"><div><b>Estimativa genérica</b><small>Curva inicial baseada em dose, intervalo, tempo de pico e meia-vida aproximados. A incerteza será informada.</small></div></div><div class="item"><div><b>Calibração individual</b><small>Os exames poderão ajustar a escala da curva quando houver dados suficientes e compatíveis; os resultados medidos continuarão destacados separadamente.</small></div></div>
-<div class="item"><div><b>Exames reais</b><small>Resultados laboratoriais registrados, preservados exatamente como informados.</small></div></div>
+<div class="item"><div><b>Estimativa genérica</b><small>Curva inicial baseada em dose, intervalo, tempo de pico e meia-vida aproximados. A incerteza será informada.</small></div></div><div class="item"><div><b>Calibração individual</b><small>Os exames poderão ajustar a escala da curva quando houver dados suficientes e compatíveis; os resultados medidos continuarão destacados separadamente.</small></div></div><div class="item"><div><b>Exames reais</b><small>Resultados laboratoriais registrados, preservados exatamente como informados.</small></div></div>
 <h2 style="margin-top:18px">Dados disponíveis para análise</h2><div id="modelStats" class="muted">Adicione exames e registros de aplicação para visualizar a quantidade de dados disponível.</div></div>
 </section>
 <section class="view" id="reminders">
@@ -72,55 +71,199 @@ $("compound").addEventListener("change",()=>{const d=$("compound").value==="dura
 $("calculate").onclick=()=>{const v=$("compound").value,vol=v==="durateston"?num("dvolume"):num("volume");if(vol===null||vol<=0){alert("Informe um volume maior que zero.");return}let parts=[],total=0;if(v==="durateston"){for(const [id,name] of [["dprop","Propionato"],["dphen","Fenilpropionato"],["diso","Isocaproato"],["ddec","Decanoato"]]){const c=num(id);if(c===null||c<0){alert("Confira a concentração de cada éster.");return}const mg=c*vol;total+=mg;parts.push(name+": "+fmt(mg)+" mg")}}else{const c=num("concentration");if(c===null||c<=0){alert("Informe uma concentração válida.");return}total=c*vol;parts.push("Quantidade: "+fmt(total)+" mg")}const box=$("calcResult");box.innerHTML="<strong>"+fmt(total)+" mg</strong><p>Quantidade total calculada</p>"+parts.map(x=>"<p>"+x+"</p>").join("")+($("interval").value?"<p>Intervalo informado: "+$("interval").value+" dias (não avaliado clinicamente)</p>":"");box.classList.remove("hidden");drawProjection()};
 $("appDate").value=today;$("labDate").value=today;$("remDate").value=db.reminder.date||today;
 $("saveApp").onclick=()=>{if(!$("appDate").value){alert("Informe a data.");return}const c=$("compound").value,vol=c==="durateston"?num("dvolume"):num("volume");let mg=null;if(vol!==null&&vol>0){if(c==="durateston")mg=["dprop","dphen","diso","ddec"].reduce((s,id)=>s+(num(id)||0),0)*vol;else if(num("concentration")!==null)mg=num("concentration")*vol}db.apps.push({date:$("appDate").value,time:$("appTime").value,compound:c,volume:vol,mg,note:$("appNote").value});$("appNote").value="";persist()};
-function parseRange(s){const m=(s||"").trim().replace(",",".").match(/^\s*(-?\d+(?:\.\d+)?)\s*[-–—a]\s*(-?\d+(?:\.\d+)?)\s*$/i);return m?[Number(m[1]),Number(m[2])]:null}
+function parseRange(s){const m=(s||"").trim().replace(",",".").match(/^\s*(-?\d+(?:\.\d+)?)\s*$/i);return m?[Number(m[1]),Number(m[2])]:null}
 function assess(value,range,label,unit){if(value===null)return null;if(!range)return label+": resultado "+fmt(value)+" "+unit+"; informe a faixa de referência do laboratório para classificar.";if(value<range[0])return "Abaixo da referência: "+label+" ("+fmt(value)+" "+unit+"; referência "+range[0]+"–"+range[1]+").";if(value>range[1])return "Acima da referência: "+label+" ("+fmt(value)+" "+unit+"; referência "+range[0]+"–"+range[1]+").";return "Dentro da referência informada: "+label+" ("+fmt(value)+" "+unit+")."}
-function interpretLab(x){const findings=[assess(x.total,x.refTotal,"Testosterona total","ng/dL"),assess(x.e2,x.refE2,"Estradiol",x.e2Unit||"unidade não informada"),assess(x.dht,x.refDht,"DHT",x.dhtUnit||"unidade não informada"),assess(x.shbg,x.refShbg,"SHBG","unidade do laudo")].filter(Boolean);const abnormal=findings.some(s=>s.startsWith("Abaixo")||s.startsWith("Acima"));return {findings,abnormal,summary:abnormal?"Há resultado(s) fora da faixa de referência informada. Isso não estabelece diagnóstico; leve o laudo ao médico para interpretação clínica.":"Não foi possível identificar alteração com os intervalos fornecidos. Isso não significa, por si só, que esteja tudo normal."}}
-$("saveLab").onclick=()=>{const date=$("labDate").value,total=num("total");if(!date||total===null){alert("Informe a data e a testosterona total do exame.");return}const x={date,time:$("labTime").value,total,free:num("free"),freeUnit:$("freeUnit").value,shbg:num("shbg"),e2:num("e2"),e2Unit:$("e2Unit").value,dht:num("dht"),dhtUnit:$("dhtUnit").value,refTotal:parseRange($("refTotal").value),refE2:parseRange($("refE2").value),refDht:parseRange($("refDht").value),refShbg:parseRange($("refShbg").value),since:num("since"),compound:$("labCompound").value,note:$("labNote").value};db.labs.push(x);const result=interpretLab(x);const box=$("labInterpretation");box.innerHTML="<b>"+result.summary+"</b><br>"+result.findings.map(s=>"• "+s).join("<br>")+"<br><br><b>Importante:</b> análise automática educativa baseada nos intervalos digitados do próprio laboratório. Não substitui avaliação médica.";box.classList.remove("hidden");$("labNote").value="";persist()};
-function del(type,i){if(confirm("Excluir este registro?")){db[type].splice(i,1);persist()}}
-function renderAll(){const apps=$("appList");apps.innerHTML=db.apps.length?"":"<div class='empty'>Nenhuma aplicação registrada.</div>";[...db.apps].map((x,i)=>({...x,i})).reverse().forEach(x=>{const d=document.createElement("div");d.className="item";d.innerHTML="<div><b>"+x.date+" • "+(x.time||"")+"</b><small>"+x.compound+" • "+(x.volume??"—")+" mL • "+(x.mg===null?"quantidade não calculada":fmt(x.mg)+" mg")+(x.note?" • "+x.note:"")+"</small></div><button aria-label='Excluir'>×</button>";d.querySelector("button").onclick=()=>del("apps",x.i);apps.append(d)});
-const labs=$("labList");labs.innerHTML=db.labs.length?"":"<div class='empty'>Nenhum exame registrado.</div>";[...db.labs].map((x,i)=>({...x,i})).sort((a,b)=>b.date.localeCompare(a.date)).forEach(x=>{const d=document.createElement("div");d.className="item";d.innerHTML="<div><b>"+x.date+" • "+fmt(x.total)+" ng/dL</b><small>TT"+(x.free!==null?" • Livre: "+x.free+" "+x.freeUnit:"")+(x.shbg!==null?" • SHBG: "+x.shbg:"")+(x.e2!==null?" • E2: "+x.e2+" "+(x.e2Unit||""):"")+(x.dht!==null?" • DHT: "+x.dht+" "+(x.dhtUnit||""):"")+(x.since!==null?" • "+x.since+" h após aplicação":"")+(x.compound?" • "+x.compound:"")+(x.note?"<br>"+x.note:"")+"</small></div><button aria-label='Excluir'>×</button>";d.querySelector("button").onclick=()=>del("labs",x.i);labs.append(d)});drawChart();drawProjection();$("modelStats").textContent=db.labs.length+" exame(s) e "+db.apps.length+" aplicação(ões) registrados. Para calibrar uma curva em ng/dL, serão necessários exames seriados com data, horário, tempo desde a última aplicação, formulação e dose correspondentes, além de validação do modelo. Até lá, o gráfico mostra somente medições reais.";drawProjection();$("remEnabled").checked=!!db.reminder.enabled;$("remDate").value=db.reminder.date||today;$("remInterval").value=db.reminder.interval||"";$("remTime").value=db.reminder.time||"12:00"}
+function interpretLab(x){const findings=[assess(x.total,x.refTotal,"Testosterona total","ng/dL"),assess(x.e2,x.refE2,"Estradiol",x.e2Unit||"unidade não informada"),assess(x.dht,x.refDht,"DHT",x.dhtUnit||"unidade não informada"),assess(x.shbg,x.refShbg,"SHBG","")].filter(Boolean);return findings.length?findings.join(" "):"Dados insuficientes para interpretação automática."}
+$("saveLab").onclick=()=>{const total=num("total");if(total===null){alert("Informe a testosterona total.");return}const x={date:$("labDate").value,time:$("labTime").value,total,free:num("free"),freeUnit:$("freeUnit").value,shbg:num("shbg"),e2:num("e2"),e2Unit:$("e2Unit").value,dht:num("dht"),dhtUnit:$("dhtUnit").value,since:num("since"),refTotal:parseRange($("refTotal").value),refE2:parseRange($("refE2").value),refDht:parseRange($("refDht").value),refShbg:parseRange($("refShbg").value),compound:$("labCompound").value,note:$("labNote").value};db.labs.push(x);$("labInterpretation").textContent=interpretLab(x);$("labInterpretation").classList.remove("hidden");persist();drawChart()};
+function renderAll(){const apps=$("appList");apps.innerHTML=db.apps.length?"":"<div class='empty'>Nenhuma aplicação registrada.</div>";[...db.apps].map((x,i)=>({...x,i})).reverse().forEach(x=>{const d=document.createElement("div");d.className="item";d.innerHTML="<div><b>"+x.date+" • "+(x.time||"")+"</b><small>"+x.compound+" • "+(x.volume??"—")+" mL • "+(x.mg===null?"quantidade não calculada":fmt(x.mg)+" mg")+(x.note?" • "+x.note:"")+"</small></div><button aria-label='Remover' data-i="+x.i+">×</button>";d.querySelector("button").onclick=()=>{db.apps.splice(x.i,1);persist()};apps.appendChild(d)});const labs=$("labList");labs.innerHTML=db.labs.length?"":"<div class='empty'>Nenhum exame registrado.</div>";[...db.labs].map((x,i)=>({...x,i})).reverse().forEach(x=>{const d=document.createElement("div");d.className="item";d.innerHTML="<div><b>"+x.date+" • TT "+fmt(x.total,0)+" ng/dL</b><small>"+(x.compound||"")+(x.note?" • "+x.note:"")+"</small></div><button aria-label='Remover' data-i="+x.i+">×</button>";d.querySelector("button").onclick=()=>{db.labs.splice(x.i,1);persist();drawChart()};labs.appendChild(d)});$("remEnabled").checked=!!db.reminder.enabled;$("remDate").value=db.reminder.date||today;$("remInterval").value=db.reminder.interval||14;$("remTime").value=db.reminder.time||"12:00";const stats=$("modelStats");if(db.labs.length||db.apps.length){stats.innerHTML="Aplicações registradas: "+db.apps.length+" • Exames: "+db.labs.length}else{stats.textContent="Adicione exames e registros de aplicação para visualizar a quantidade de dados disponível."}}
+const PK_DATA = {
+  propionato:   {name:"Propionato",        half:1.0,  tmax:1.0, active:0.84, color:"#62d6b5", peakPerMg:18},
+  enantato:     {name:"Enantato",          half:5.5,  tmax:1.5, active:0.72, color:"#8db8ff", peakPerMg:7.0},
+  cipionato:    {name:"Cipionato",         half:6.5,  tmax:2.5, active:0.70, color:"#d5a6ff", peakPerMg:6.5},
+  undec:        {name:"Undecilato",        half:21,   tmax:7.0, active:0.63, color:"#9bd18b", peakPerMg:2.8},
+  // For Durateston components
+  prop:         {name:"Propionato",        half:1.0,  tmax:1.0, active:0.84, color:"#62d6b5", peakPerMg:18},
+  phen:         {name:"Fenilpropionato",   half:2.5,  tmax:1.5, active:0.69, color:"#f3c879", peakPerMg:10},
+  iso:          {name:"Isocaproato",       half:4.0,  tmax:2.0, active:0.75, color:"#ff9f80", peakPerMg:8.0},
+  dec:          {name:"Decanoato",         half:7.5,  tmax:3.0, active:0.65, color:"#f08ab5", peakPerMg:5.5}
+};
 
-// Comparação farmacocinética genérica: decaimento de primeira ordem e aplicações repetidas.
-// O eixo vertical é % do pico de equilíbrio teórico (unidade relativa), nunca ng/dL.
-const PK_SERIES=[
- {id:"prop",name:"Propionato",half:1.5,color:"#62d6b5"},
- {id:"phen",name:"Fenilpropionato",half:3.5,color:"#f3c879"},
- {id:"enan",name:"Enantato",half:5.5,color:"#8db8ff"},
- {id:"cyp",name:"Cipionato",half:6,color:"#d5a6ff"},
- {id:"iso",name:"Isocaproato",half:8,color:"#ff9f80"},
- {id:"dec",name:"Decanoato",half:13,color:"#f08ab5"},
- {id:"undec",name:"Undecilato",half:25,color:"#9bd18b"}
-];
-function drawProjection(){
- const svg=$("projectionSvg");if(!svg)return;
- const duration=Math.max(7,Math.min(365,Number($("duration")?.value)||60));
- const interval=Math.max(.5,Math.min(90,Number($("interval")?.value)||7));
- const W=700,H=300,L=55,R=682,T=22,B=248,plotW=R-L,plotH=B-T;
- const x=d=>L+(d/duration)*plotW, y=v=>B-(v/100)*plotH;
- let out="";
- // Grid and axes
- for(let v=0;v<=100;v+=20){const yy=y(v);out+=`<line x1="${L}" y1="${yy}" x2="${R}" y2="${yy}" stroke="#2b3b53" stroke-width="1"/><text x="46" y="${yy+4}" fill="#9aabc0" font-size="11" text-anchor="end">${v}%</text>`;}
- for(let i=0;i<=4;i++){const day=duration*i/4,xx=x(day);out+=`<line x1="${xx}" y1="${T}" x2="${xx}" y2="${B}" stroke="#223149" stroke-width="1"/><text x="${xx}" y="269" fill="#9aabc0" font-size="11" text-anchor="middle">${Math.round(day)}d</text>`;}
- out+=`<text x="${L}" y="13" fill="#9aabc0" font-size="11">Nível relativo (% do pico no equilíbrio)</text>`;
- // Each injection adds one normalized unit; the curve is the sum of exponential decays.
- for(const p of PK_SERIES){
-  const k=Math.LN2/p.half, r=Math.exp(-k*interval), steadyPeak=1/(1-r);
-  const pts=[];const steps=Math.max(240,Math.min(1400,Math.ceil(duration*12)));
-  for(let i=0;i<=steps;i++){const day=duration*i/steps;let total=0;for(let n=0;n<=Math.floor(day/interval);n++){const age=day-n*interval;total+=Math.exp(-k*age);}const pct=Math.min(100,total/steadyPeak*100);pts.push(x(day).toFixed(1)+","+y(pct).toFixed(1));}
-  out+=`<polyline points="${pts.join(" ")}" fill="none" stroke="${p.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
-  // Mark troughs immediately before each subsequent application.
-  for(let n=1;n*interval<=duration;n++){const day=n*interval-0.015;let total=0;for(let j=0;j<n;j++)total+=Math.exp(-k*(day-j*interval));const pct=Math.min(100,total/steadyPeak*100);out+=`<circle cx="${x(day)}" cy="${y(pct)}" r="2.8" fill="${p.color}"/>`;}
- }
- out+=`<line x1="${L}" y1="${B}" x2="${R}" y2="${B}" stroke="#8294aa"/>`;
- svg.innerHTML=out;
- const legend=$("projectionLegend");legend.innerHTML=PK_SERIES.map(p=>`<div class="muted" style="display:flex;align-items:center;gap:7px"><span style="display:inline-block;width:18px;height:4px;border-radius:4px;background:${p.color}"></span>${p.name} • meia-vida ${fmt(p.half,1)} d</div>`).join("");
- const rows=PK_SERIES.map(p=>{const trough=Math.pow(2,-interval/p.half)*100,stable=Math.round(trough),steady=Math.ceil(4.322*p.half);return `<tr><td style="padding:7px;border-bottom:1px solid #2b3b53">${p.name}</td><td style="padding:7px;border-bottom:1px solid #2b3b53;text-align:right">${fmt(p.half,1)} d</td><td style="padding:7px;border-bottom:1px solid #2b3b53;text-align:right">${stable}%</td><td style="padding:7px;border-bottom:1px solid #2b3b53;text-align:right">~${steady} d</td></tr>`;}).join("");
- $("stabilityTable").innerHTML=`<div style="font-size:13px;font-weight:700;margin-bottom:7px">Comparação no intervalo informado: ${fmt(interval,1)} dia(s)</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="color:#9aabc0;text-align:left"><th style="padding:7px">Éster</th><th style="padding:7px;text-align:right">Meia-vida</th><th style="padding:7px;text-align:right">Vale/pico</th><th style="padding:7px;text-align:right">~95% equilíbrio</th></tr></thead><tbody>${rows}</tbody></table></div>`;
- $("projectionStatus").textContent="As curvas mostram a acumulação teórica após aplicações repetidas e os vales imediatamente antes da aplicação seguinte. Vale/pico mais alto significa menor oscilação relativa nesse intervalo. O tempo até ~95% do equilíbrio é aproximado (cerca de 4,3 meias-vidas). Modelo didático de eliminação exponencial, com dose relativa igual por aplicação; não converte mg em ng/dL, não representa níveis sanguíneos reais e não recomenda dose ou intervalo.";
+function getSelectedDoses(){
+  const v = $("compound").value;
+  const doses = []; // array of {pk, mg}
+  if(v === "durateston"){
+    const vol = num("dvolume") || 0;
+    const map = [["dprop","prop"],["dphen","phen"],["diso","iso"],["ddec","dec"]];
+    for(const [id, key] of map){
+      const c = num(id);
+      if(c !== null && c > 0 && vol > 0){
+        doses.push({pk: PK_DATA[key], mg: c * vol});
+      }
+    }
+  } else {
+    const map = {
+      propionato: "propionato",
+      enantato: "enantato",
+      cipionato: "cipionato",
+      undec: "undec",
+      custom: "enantato" // fallback
+    };
+    const key = map[v] || "enantato";
+    const conc = num("concentration");
+    const vol = num("volume");
+    if(conc !== null && conc > 0 && vol !== null && vol > 0){
+      doses.push({pk: PK_DATA[key], mg: conc * vol});
+    }
+  }
+  return doses;
 }
-["duration","interval","compound"].forEach(id=>$(id).addEventListener("input",drawProjection));
-$("compound").addEventListener("change",drawProjection);
 
+function singleDoseContrib(age, pk, doseMg){
+  if(age < 0 || doseMg <= 0) return 0;
+  const peak = pk.peakPerMg * doseMg;
+  if(age <= pk.tmax){
+    // smooth rise (quadratic for nicer curve)
+    const r = age / pk.tmax;
+    return peak * r * r;
+  }
+  return peak * Math.pow(0.5, (age - pk.tmax) / pk.half);
+}
+
+function drawProjection(){
+  const svg = $("projectionSvg");
+  if(!svg) return;
+
+  const duration = Math.max(14, Math.min(365, Number($("duration")?.value) || 90));
+  const interval = Math.max(0.5, Math.min(90, Number($("interval")?.value) || 7));
+  const doses = getSelectedDoses();
+
+  const W=700, H=300, L=55, R=682, T=22, B=248, plotW=R-L, plotH=B-T;
+
+  // Compute curve first to know max for Y scale
+  const steps = Math.max(300, Math.min(1800, Math.ceil(duration * 10)));
+  const points = [];
+  let maxVal = 100; // minimum scale
+
+  if(doses.length === 0){
+    // empty state
+    svg.innerHTML = `<text x="350" y="150" fill="#9aabc0" font-size="14" text-anchor="middle">Informe concentração e volume para ver a projeção</text>`;
+    $("projectionLegend").innerHTML = "";
+    $("projectionStatus").textContent = "Preencha os campos de concentração/volume e intervalo para gerar a curva.";
+    $("stabilityTable").innerHTML = "";
+    return;
+  }
+
+  for(let i=0; i<=steps; i++){
+    const day = duration * i / steps;
+    let total = 0;
+    // sum all past injections
+    const nInjections = Math.floor(day / interval) + 1;
+    for(let n=0; n<nInjections; n++){
+      const age = day - n * interval;
+      for(const d of doses){
+        total += singleDoseContrib(age, d.pk, d.mg);
+      }
+    }
+    points.push({day, val: total});
+    if(total > maxVal) maxVal = total;
+  }
+
+  // nice Y max (round up)
+  const yMax = Math.ceil(maxVal / 200) * 200;
+  const yMaxFinal = Math.max(800, Math.min(4000, yMax));
+
+  const x = d => L + (d / duration) * plotW;
+  const y = v => B - (v / yMaxFinal) * plotH;
+
+  let out = "";
+
+  // Horizontal grid + labels
+  const ySteps = 5;
+  for(let i=0; i<=ySteps; i++){
+    const val = (yMaxFinal / ySteps) * i;
+    const yy = y(val);
+    out += `<line x1="${L}" y1="${yy}" x2="${R}" y2="${yy}" stroke="#2b3b53" stroke-width="1"/>`;
+    out += `<text x="48" y="${yy+4}" fill="#9aabc0" font-size="11" text-anchor="end">${Math.round(val)}</text>`;
+  }
+
+  // Vertical grid
+  for(let i=0; i<=4; i++){
+    const day = duration * i / 4;
+    const xx = x(day);
+    out += `<line x1="${xx}" y1="${T}" x2="${xx}" y2="${B}" stroke="#223149" stroke-width="1"/>`;
+    out += `<text x="${xx}" y="269" fill="#9aabc0" font-size="11" text-anchor="middle">${Math.round(day)}d</text>`;
+  }
+
+  out += `<text x="${L}" y="14" fill="#9aabc0" font-size="11">Concentração estimada (ng/dL)</text>`;
+
+  // The main curve
+  const pts = points.map(p => x(p.day).toFixed(1) + "," + y(p.val).toFixed(1));
+  // Use color of first component or a default
+  const mainColor = doses[0].pk.color || "#62d6b5";
+  out += `<polyline points="${pts.join(" ")}" fill="none" stroke="${mainColor}" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+  // Optional fill under curve for nicer look
+  const fillPts = pts[0] + " " + pts.join(" ") + ` ${x(duration).toFixed(1)},${B} ${x(0).toFixed(1)},${B}`;
+  out += `<polygon points="${fillPts}" fill="${mainColor}" fill-opacity="0.12"/>`;
+
+  // Mark injection points
+  for(let n=0; n*interval <= duration; n++){
+    const day = n * interval;
+    // find approx value at that day
+    let total = 0;
+    for(let j=0; j<=n; j++){
+      const age = day - j * interval;
+      for(const d of doses) total += singleDoseContrib(age, d.pk, d.mg);
+    }
+    out += `<circle cx="${x(day)}" cy="${y(total)}" r="3.2" fill="${mainColor}" stroke="#0b1220" stroke-width="1"/>`;
+  }
+
+  out += `<line x1="${L}" y1="${B}" x2="${R}" y2="${B}" stroke="#8294aa"/>`;
+  svg.innerHTML = out;
+
+  // Legend
+  const legend = $("projectionLegend");
+  if(doses.length === 1){
+    const d = doses[0];
+    legend.innerHTML = `<div class="muted" style="display:flex;align-items:center;gap:8px">
+      <span style="display:inline-block;width:20px;height:4px;border-radius:4px;background:${d.pk.color}"></span>
+      <b>${d.pk.name}</b> — ${fmt(d.mg)} mg por aplicação • meia-vida ${fmt(d.pk.half,1)} d • pico ~${fmt(d.pk.tmax,1)} d
+    </div>`;
+  } else {
+    legend.innerHTML = doses.map(d => 
+      `<div class="muted" style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+        <span style="display:inline-block;width:16px;height:3px;border-radius:3px;background:${d.pk.color}"></span>
+        ${d.pk.name}: ${fmt(d.mg)} mg
+      </div>`
+    ).join("") + `<div class="muted" style="margin-top:6px">Curva = soma dos 4 ésteres do Durateston</div>`;
+  }
+
+  // Status
+  const totalMg = doses.reduce((s,d)=>s+d.mg,0);
+  $("projectionStatus").innerHTML = `Dose total por aplicação: <b>${fmt(totalMg)} mg</b> • Intervalo: <b>${fmt(interval,1)} dias</b> • Modelo simplificado (não é previsão individual). Os valores em ng/dL são estimativas genéricas baseadas em parâmetros publicados aproximados.`;
+
+  // Simple stability info
+  const troughApprox = points.length ? Math.min(...points.filter(p => {
+    // approximate troughs (just before next injection)
+    const rem = p.day % interval;
+    return rem > interval - 0.3 || rem < 0.05;
+  }).map(p=>p.val)) : 0;
+
+  $("stabilityTable").innerHTML = `
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px">Resumo da projeção</div>
+    <div class="muted" style="font-size:12px;line-height:1.6">
+      Pico estimado no equilíbrio: ~<b>${fmt(maxVal,0)} ng/dL</b><br>
+      Vale aproximado: ~<b>${fmt(troughApprox,0)} ng/dL</b><br>
+      Oscilação relativa: ~<b>${maxVal > 0 ? fmt((maxVal-troughApprox)/maxVal*100,0) : 0}%</b>
+    </div>
+    <p class="muted" style="margin-top:10px;font-size:11px">Modelo didático. Não recomenda dose ou intervalo. Use apenas como referência visual.</p>`;
+}
+
+["duration","interval","compound","concentration","volume","dvolume","dprop","dphen","diso","ddec"].forEach(id=>{
+  const el = $(id);
+  if(el) el.addEventListener("input", drawProjection);
+});
+$("compound").addEventListener("change", drawProjection);
 function drawChart(){const c=$("labChart");if(!c)return;const ctx=c.getContext("2d"),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);ctx.strokeStyle="#2b3b53";ctx.fillStyle="#9aabc0";ctx.font="12px system-ui";const arr=[...db.labs].filter(x=>Number.isFinite(x.total)).sort((a,b)=>a.date.localeCompare(b.date));if(!arr.length){ctx.fillText("Adicione exames para visualizar os resultados.",18,110);return}const max=Math.max(100,...arr.map(x=>x.total))*1.15,min=0,left=48,right=w-16,top=16,bottom=h-32;for(let i=0;i<=4;i++){const y=bottom-(bottom-top)*i/4;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();ctx.fillText(String(Math.round(max*i/4)),4,y+4)}const xs=arr.map((x,i)=>left+(arr.length===1?(right-left)/2:i*(right-left)/(arr.length-1)));ctx.strokeStyle="#62d6b5";ctx.lineWidth=3;ctx.beginPath();arr.forEach((x,i)=>{const y=bottom-(x.total/max)*(bottom-top);i?ctx.lineTo(xs[i],y):ctx.moveTo(xs[i],y)});ctx.stroke();arr.forEach((x,i)=>{const y=bottom-(x.total/max)*(bottom-top);ctx.fillStyle="#62d6b5";ctx.beginPath();ctx.arc(xs[i],y,5,0,Math.PI*2);ctx.fill();ctx.fillStyle="#edf3fb";ctx.fillText(fmt(x.total,0),xs[i]-14,y-10);ctx.fillStyle="#9aabc0";ctx.fillText(x.date.slice(5),xs[i]-16,h-8)})}
 $("saveReminder").onclick=async()=>{const interval=Number($("remInterval").value);if($("remEnabled").checked&&(!$("remDate").value||!Number.isInteger(interval)||interval<1)){alert("Informe uma data de referência e um intervalo válido em dias.");return}db.reminder={enabled:$("remEnabled").checked,date:$("remDate").value,interval,time:$("remTime").value};persist();if(db.reminder.enabled&&"Notification"in window&&Notification.permission==="default"){try{await Notification.requestPermission()}catch(e){}}$("remStatus").textContent="Configuração salva neste navegador. Para notificações confiáveis com o app fechado, será necessária a implementação Android nativa."};
 $("testReminder").onclick=async()=>{if(!("Notification"in window)){alert("Este navegador não oferece a API de notificações.");return}let p=Notification.permission;if(p==="default")p=await Notification.requestPermission();if(p==="granted")new Notification("TESTOLAB",{body:"BORA MONSTRÃO, HOJE É DIA DE TOMAR SUA TESTO"});else alert("Permissão de notificação não concedida.")};
@@ -128,4 +271,5 @@ $("exportData").onclick=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{ty
 $("importFile").onchange=async e=>{try{const obj=JSON.parse(await e.target.files[0].text());if(!Array.isArray(obj.apps)||!Array.isArray(obj.labs))throw Error();if(confirm("Substituir os dados atuais pelo backup?")){db=obj;persist();$("dataStatus").textContent="Backup importado."}}catch(err){alert("Arquivo inválido ou incompatível.")}e.target.value=""};
 $("clearData").onclick=()=>{if(confirm("Apagar permanentemente todos os registros locais deste protótipo?")){db={apps:[],labs:[],reminder:{enabled:false,date:today,interval:14,time:"12:00"}};persist();$("dataStatus").textContent="Dados locais apagados."}};
 renderAll();
+drawProjection();
 </script></body></html>
