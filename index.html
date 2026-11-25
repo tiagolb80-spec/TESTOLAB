@@ -63,6 +63,8 @@ main{max-width:760px;margin:auto;padding:16px 14px 60px}.view{display:none}.view
 const $=id=>document.getElementById(id), today=new Date().toISOString().slice(0,10);
 let db={apps:[],labs:[],reminder:{enabled:false,date:today,interval:14,time:"12:00"}};
 try{db={...db,...JSON.parse(localStorage.getItem("testolab_v1")||"{}")}}catch(e){}
+// Corrige registros antigos que foram salvos com faixa incompleta pela versão anterior.
+for(const lab of (db.labs||[])){for(const key of ["refTotal","refFree","refE2","refDht","refShbg"]){const r=lab[key];if(r&&(!Array.isArray(r)||r.length!==2||r[0]===null||r[1]===null||!Number.isFinite(Number(r[0]))||!Number.isFinite(Number(r[1]))||Number(r[0])>Number(r[1])))lab[key]=null;}}
 function persist(){localStorage.setItem("testolab_v1",JSON.stringify(db));renderAll()}
 function num(id){const v=$(id).value.trim();return v===""?null:Number(v)}
 function fmt(n,d=2){return Number(n).toLocaleString("pt-BR",{maximumFractionDigits:d})}
