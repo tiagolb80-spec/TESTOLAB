@@ -73,7 +73,7 @@ $("appDate").value=today;$("labDate").value=today;$("remDate").value=db.reminder
 $("saveApp").onclick=()=>{if(!$("appDate").value){alert("Informe a data.");return}const c=$("compound").value,vol=c==="durateston"?num("dvolume"):num("volume");let mg=null;if(vol!==null&&vol>0){if(c==="durateston")mg=["dprop","dphen","diso","ddec"].reduce((s,id)=>s+(num(id)||0),0)*vol;else if(num("concentration")!==null)mg=num("concentration")*vol}db.apps.push({date:$("appDate").value,time:$("appTime").value,compound:c,volume:vol,mg,note:$("appNote").value});$("appNote").value="";persist()};
 function parseRange(s){
   if(!s || !String(s).trim()) return null;
-  const m=String(s).trim().match(/^\\s*(-?\\d+(?:[.,]\\d+)?)\\s*(?:-|–|—|\\ba\\b)\\s*(-?\\d+(?:[.,]\\d+)?)\\s*$/i);
+  const m=String(s).trim().match(/^\s*(-?\d+(?:[.,]\d+)?)\s*(?:-|–|—|\ba\b)\s*(-?\d+(?:[.,]\d+)?)\s*$/i);
   if(!m) return null;
   const low=Number(m[1].replace(",","."));
   const high=Number(m[2].replace(",","."));
