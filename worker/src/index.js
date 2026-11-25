@@ -127,15 +127,23 @@ REFERÊNCIAS RECUPERADAS DO PUBMED (use apenas as que forem pertinentes; se tít
 ${JSON.stringify(evidence)}
 Estruture: 1) resumo objetivo; 2) análise por marcador; 3) limitações/unidades e contexto; 4) perguntas úteis para discutir com médico; 5) fontes com título, ano e link. Deixe claro que isto não substitui avaliação médica e que a busca bibliográfica é limitada aos resultados apresentados.`;
       const model = env.GEMINI_MODEL || MODEL;
-      const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY), {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 1800 }
-        })
+      const geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(env.GEMINI_API_KEY);
+      const geminiBody = JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 1800 }
       });
-      const result = await response.json();
+      // O Google recomenda novas tentativas com espera progressiva para erros temporários 503/429.
+      let response, result;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        response = await fetch(geminiUrl, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: geminiBody
+        });
+        result = await response.json();
+        if (response.ok || ![429, 500, 502, 503, 504].includes(response.status) || attempt === 2) break;
+        await new Promise(resolve => setTimeout(resolve, 1200 * Math.pow(2, attempt)));
+      }
       if (!response.ok) {
         const message = result?.error?.message || "Falha na API Gemini.";
         return json({ error: "Gemini: " + String(message).slice(0, 300) }, response.status === 429 ? 429 : 502, origin);
