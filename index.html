@@ -103,7 +103,7 @@ function interpretLab(x){
   ].filter(Boolean);
   return findings.length?findings.join(" "):"Dados insuficientes para interpretação automática.";
 }
-function getAIEndpoint(){return (localStorage.getItem("testolab_ai_endpoint")||"").trim().replace(/\\/+$/,"")}
+function getAIEndpoint(){return (localStorage.getItem("testolab_ai_endpoint")||"").trim().replace(/\/+$/,"")}
 function renderAIButton(lab){
   const box=$("labInterpretation");
   const button=document.createElement("button");button.className="secondary";button.type="button";button.textContent="Interpretar com IA gratuita + PubMed";button.style.marginTop="12px";
@@ -114,7 +114,7 @@ function safeText(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"
 async function interpretWithAI(lab,button){
   const endpoint=getAIEndpoint(),box=$("labInterpretation");
   if(!endpoint){alert("Configure o endereço do servidor em Dados > Configuração da IA.");return}
-  if(!/^https:\\/\\//i.test(endpoint)){alert("O endereço do servidor deve começar com https://");return}
+  if(!/^https:\/\//i.test(endpoint)){alert("O endereço do servidor deve começar com https://");return}
   button.disabled=true;button.textContent="Pesquisando no PubMed e interpretando...";
   const payload={
     values:{total:lab.total,free:lab.free,shbg:lab.shbg,e2:lab.e2,dht:lab.dht,since:lab.since},
@@ -140,8 +140,8 @@ async function interpretWithAI(lab,button){
 }
 $("saveLab").onclick=()=>{const total=num("total");if(total===null){alert("Informe a testosterona total.");return}const x={date:$("labDate").value,time:$("labTime").value,total,free:num("free"),freeUnit:$("freeUnit").value,shbg:num("shbg"),e2:num("e2"),e2Unit:$("e2Unit").value,dht:num("dht"),dhtUnit:$("dhtUnit").value,since:num("since"),refTotal:parseRange($("refTotal").value),refFree:parseRange($("refFree").value),refE2:parseRange($("refE2").value),refDht:parseRange($("refDht").value),refShbg:parseRange($("refShbg").value),compound:$("labCompound").value,note:$("labNote").value};db.labs.push(x);$("labInterpretation").textContent=interpretLab(x);$("labInterpretation").classList.remove("hidden");renderAIButton(x);persist();drawChart()};
 $("aiEndpoint").value=getAIEndpoint();
-$("saveAIEndpoint").onclick=()=>{const value=$("aiEndpoint").value.trim().replace(/\\/+$/,"");if(value&&!/^https:\\/\\//i.test(value)){alert("Use um endereço HTTPS válido.");return}localStorage.setItem("testolab_ai_endpoint",value);$("aiEndpointStatus").textContent=value?"Endereço salvo neste dispositivo.":"Endereço removido.";};
-$("testAIEndpoint").onclick=async()=>{const value=$("aiEndpoint").value.trim().replace(/\\/+$/,"");if(!/^https:\\/\\//i.test(value)){alert("Informe primeiro o endereço HTTPS do Worker.");return}const status=$("aiEndpointStatus");status.textContent="Testando...";try{const r=await fetch(value+"/health");const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||"Servidor não respondeu corretamente.");status.textContent="Conexão OK — "+j.service+" / "+j.model;}catch(e){status.textContent="Falha na conexão: "+e.message;}};
+$("saveAIEndpoint").onclick=()=>{const value=$("aiEndpoint").value.trim().replace(/\/+$/,"");if(value&&!/^https:\/\//i.test(value)){alert("Use um endereço HTTPS válido.");return}localStorage.setItem("testolab_ai_endpoint",value);$("aiEndpointStatus").textContent=value?"Endereço salvo neste dispositivo.":"Endereço removido.";};
+$("testAIEndpoint").onclick=async()=>{const value=$("aiEndpoint").value.trim().replace(/\/+$/,"");if(!/^https:\/\//i.test(value)){alert("Informe primeiro o endereço HTTPS do Worker.");return}const status=$("aiEndpointStatus");status.textContent="Testando...";try{const r=await fetch(value+"/health");const j=await r.json();if(!r.ok||!j.ok)throw new Error(j.error||"Servidor não respondeu corretamente.");status.textContent="Conexão OK — "+j.service+" / "+j.model;}catch(e){status.textContent="Falha na conexão: "+e.message;}};
 function renderAll(){const apps=$("appList");apps.innerHTML=db.apps.length?"":"<div class='empty'>Nenhuma aplicação registrada.</div>";[...db.apps].map((x,i)=>({...x,i})).reverse().forEach(x=>{const d=document.createElement("div");d.className="item";d.innerHTML="<div><b>"+x.date+" • "+(x.time||"")+"</b><small>"+x.compound+" • "+(x.volume??"—")+" mL • "+(x.mg===null?"quantidade não calculada":fmt(x.mg)+" mg")+(x.note?" • "+x.note:"")+"</small></div><button aria-label='Remover' data-i="+x.i+">×</button>";d.querySelector("button").onclick=()=>{db.apps.splice(x.i,1);persist()};apps.appendChild(d)});const labs=$("labList");labs.innerHTML=db.labs.length?"":"<div class='empty'>Nenhum exame registrado.</div>";[...db.labs].map((x,i)=>({...x,i})).reverse().forEach(x=>{const d=document.createElement("div");d.className="item";d.innerHTML="<div><b>"+x.date+" • TT "+fmt(x.total,0)+" ng/dL</b><small>"+(x.compound||"")+(x.note?" • "+x.note:"")+"</small></div><button aria-label='Remover' data-i="+x.i+">×</button>";d.querySelector("button").onclick=()=>{db.labs.splice(x.i,1);persist();drawChart()};labs.appendChild(d)});$("remEnabled").checked=!!db.reminder.enabled;$("remDate").value=db.reminder.date||today;$("remInterval").value=db.reminder.interval||14;$("remTime").value=db.reminder.time||"12:00";const stats=$("modelStats");if(db.labs.length||db.apps.length){stats.innerHTML="Aplicações registradas: "+db.apps.length+" • Exames: "+db.labs.length}else{stats.textContent="Adicione exames e registros de aplicação para visualizar a quantidade de dados disponível."}}
 const PK_DATA = {
   propionato:   {name:"Propionato",        half:1.0,  tmax:1.0, active:0.84, color:"#62d6b5", peakPerMg:18},
