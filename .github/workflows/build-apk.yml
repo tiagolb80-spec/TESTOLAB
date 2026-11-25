@@ -1,0 +1,81 @@
+name: Build APK
+
+on:
+  workflow_dispatch:  # permite rodar manualmente
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Bubblewrap CLI
+        run: npm install -g @bubblewrap/cli
+
+      - name: Generate TWA project (non-interactive defaults)
+        run: |
+          mkdir -p twa
+          cd twa
+          # Cria um twa-manifest básico apontando para o site publicado
+          cat > twa-manifest.json << 'EOF'
+          {
+            "packageId": "com.testolab.app",
+            "host": "tiagolb80-spec.github.io",
+            "name": "TestoLab",
+            "launcherName": "TestoLab",
+            "display": "standalone",
+            "themeColor": "#101827",
+            "navigationColor": "#101827",
+            "backgroundColor": "#0b1220",
+            "enableNotifications": false,
+            "startUrl": "/TESTOLAB/",
+            "iconUrl": "https://tiagolb80-spec.github.io/TESTOLAB/icon-512.png",
+            "maskableIconUrl": "https://tiagolb80-spec.github.io/TESTOLAB/icon-512.png",
+            "splashScreenFadeOutDuration": 300,
+            "signingKey": {
+              "path": "./android.keystore",
+              "alias": "android"
+            },
+            "appVersionName": "1.0.0",
+            "appVersionCode": 1,
+            "shortcuts": [],
+            "generatorApp": "bubblewrap-cli"
+          }
+          EOF
+
+      - name: Create debug keystore
+        run: |
+          keytool -genkeypair -v -keystore twa/android.keystore -alias android -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=TestoLab, OU=Dev, O=TestoLab, L=City, S=State, C=BR"
+
+      - name: Build APK with Bubblewrap
+        working-directory: twa
+        run: |
+          # Tenta inicializar e buildar. Pode precisar de ajustes finos.
+          npx @bubblewrap/cli init --manifest=https://tiagolb80-spec.github.io/TESTOLAB/manifest.json --directory=. --skipPrompts || true
+          npx @bubblewrap/cli build --skipPwaValidation || true
+          # Procura o APK gerado
+          find . -name "*.apk" -o -name "*.aab" | head -20
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: testolab-apk
+          path: |
+            twa/**/*.apk
+            twa/**/*.aab
+            **/*.apk
+          if-no-files-found: warn
