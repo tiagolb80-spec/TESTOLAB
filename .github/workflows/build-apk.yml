@@ -25,9 +25,6 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Capacitor dependencies
         working-directory: capacitor
         run: npm install
@@ -45,6 +42,9 @@ jobs:
       - name: Sync Android project
         working-directory: capacitor
         run: npx cap sync android
+
+      - name: Configure Android SDK path
+        run: echo "sdk.dir=$ANDROID_HOME" > capacitor/android/local.properties
 
       - name: Build debug APK
         working-directory: capacitor/android
