@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#0b1220">
+<title>TestoLab</title>
+<style>
+:root{color-scheme:dark;--bg:#080d16;--surface:#111827;--surface2:#1a2332;--border:#243044;--text:#f1f5f9;--muted:#94a3b8;--accent:#2dd4bf;--warn:#fbbf24;--danger:#f87171;--radius:16px;--safe-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow-x:hidden;padding-bottom:calc(72px + var(--safe-bottom))}
+.app-header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#0f172a,#0b1220);border-bottom:1px solid var(--border);padding:14px 18px 12px;padding-top:max(14px,env(safe-area-inset-top))}
+.app-header h1{margin:0;font-size:22px;font-weight:700;display:flex;align-items:center;gap:10px}
+.app-header h1 span{font-size:11px;font-weight:600;color:var(--accent);background:rgba(45,212,191,.12);border:1px solid rgba(45,212,191,.25);padding:3px 8px;border-radius:20px}
+.app-header p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:rgba(15,23,42,.92);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 6px calc(8px + var(--safe-bottom))}
+.bottom-nav button{flex:1;background:none;border:0;color:var(--muted);font-size:11px;font-weight:600;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.bottom-nav button.active{color:var(--accent)}
+.bottom-nav button svg{width:22px;height:22px}
+main{max-width:520px;margin:0 auto;padding:14px 14px 24px}
+.view{display:none;animation:fadeIn .2s ease}.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.card h2{margin:0 0 14px;font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card h2::before{content:"";width:4px;height:16px;background:var(--accent);border-radius:2px}
+.muted{color:var(--muted);font-size:13px;line-height:1.5}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.field label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font:inherit;min-width:0}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,212,191,.15)}
+.ester-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ester{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.ester label{font-size:11px;color:var(--muted);display:block;margin-bottom:6px}
+button.primary{width:100%;background:var(--accent);color:#042f2e;border:0;border-radius:12px;padding:14px;font-weight:700;font-size:15px}
+button.secondary{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:12px;padding:12px 16px;font-weight:600}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.result{background:linear-gradient(135deg,#0f2f2a,#0c1f1c);border:1px solid #1a5c50;border-radius:14px;padding:16px;margin-top:14px}
+.result strong{font-size:28px;color:var(--accent);display:block}
+.result p{margin:4px 0 0;color:#99d6c9;font-size:13px}
+.chartwrap{background:var(--bg);border-radius:14px;padding:8px;border:1px solid var(--border);overflow:hidden}
+canvas,svg{width:100%;display:block}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.item small{display:block;color:var(--muted);margin-top:3px;font-size:12px}
+.item button{background:transparent;border:0;color:var(--danger);font-size:20px;padding:4px 8px}
+.notice{border-left:3px solid var(--warn);background:rgba(251,191,36,.08);color:#fde68a;border-radius:0 10px 10px 0;padding:12px 14px;font-size:13px;line-height:1.5;margin-top:12px}
+.hidden{display:none!important}.empty{color:var(--muted);text-align:center;padding:28px 16px;font-size:14px}
+.check{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px}
+.check input{width:auto;accent-color:var(--accent)}
+</style>
+</head>
+<body>
+<header class="app-header">
+  <h1>TestoLab <span>v1.1</span></h1>
+  <p>Cálculo, projeção e acompanhamento</p>
+</header>
+<main>
+<section class="view active" id="calc">
+<div class="card"><h2>Calculadora</h2>
+<div class="field"><label>Composto</label>
+<select id="compound"><option value="propionato">Propionato</option><option value="enantato">Enantato</option><option value="cipionato">Cipionato</option><option value="undec">Undecilato</option><option value="durateston">Durateston</option><option value="custom">Outro</option></select></div>
+<div id="singleFields"><div class="grid"><div class="field"><label>Concentração (mg/mL)</label><input id="concentration" type="number" min="0" step="any" placeholder="200"></div><div class="field"><label>Volume (mL)</label><input id="volume" type="number" min="0" step="any" placeholder="0.5"></div></div></div>
+<div id="durFields" class="hidden"><p class="muted">Concentração de cada éster (mg/mL)</p>
+<div class="ester-grid">
+<div class="ester"><label>Propionato</label><input id="dprop" type="number" value="30" min="0" step="any"></div>
+<div class="ester"><label>Fenilpropionato</label><input id="dphen" type="number" value="60" min="0" step="any"></div>
+<div class="ester"><label>Isocaproato</label><input id="diso" type="number" value="60" min="0" step="any"></div>
+<div class="ester"><label>Decanoato</label><input id="ddec" type="number" value="100" min="0" step="any"></div>
+</div>
+<div class="field" style="margin-top:12px"><label>Volume (mL)</label><input id="dvolume" type="number" min="0" step="any" placeholder="1"></div></div>
+<div class="grid"><div class="field"><label>Intervalo (dias)</label><input id="interval" type="number" min="0" step="1" placeholder="7"></div>
+<div class="field"><label>Duração gráfico</label><input id="duration" type="number" min="14" value="90"></div></div>
+<button class="primary" id="calculate">Calcular e projetar</button>
+<div id="calcResult" class="result hidden"></div></div>
+<div class="card"><h2>Projeção ng/dL</h2>
+<p class="muted" style="margin-bottom:12px">Modelo simplificado. Com exames + aplicações a curva é calibrada.</p>
+<div class="chartwrap"><svg id="projectionSvg" viewBox="0 0 700 300"></svg></div>
+<div id="projectionLegend" style="margin-top:12px"></div>
+<div id="projectionStatus" class="muted" style="margin-top:10px"></div>
+<div id="stabilityTable" style="margin-top:12px"></div></div>
+<div class="card"><h2>Registrar aplicação</h2>
+<div class="grid"><div class="field"><label>Data</label><input id="appDate" type="date"></div>
+<div class="field"><label>Horário</label><input id="appTime" type="time" value="12:00"></div></div>
+<div class="field"><label>Observações</label><input id="appNote" placeholder="Lote, local..."></div>
+<button class="secondary" id="saveApp" style="width:100%">Salvar aplicação</button>
+<div id="appList" class="list" style="margin-top:14px"></div></div>
+</section>
+<section class="view" id="labs">
+<div class="card"><h2>Novo exame</h2>
+<div class="grid"><div class="field"><label>Data coleta</label><input id="labDate" type="date"></div>
+<div class="field"><label>Horário</label><input id="labTime" type="time"></div></div>
+<div class="grid"><div class="field"><label>TT (ng/dL)</label><input id="total" type="number" min="0" step="any"></div>
+<div class="field"><label>Livre</label><input id="free" type="number" min="0" step="any"></div></div>
+<div class="grid"><div class="field"><label>Unidade livre</label><input id="freeUnit" placeholder="pg/mL"></div>
+<div class="field"><label>SHBG</label><input id="shbg" type="number" min="0" step="any"></div></div>
+<div class="grid"><div class="field"><label>Estradiol</label><input id="e2" type="number" min="0" step="any"></div>
+<div class="field"><label>Unidade E2</label><input id="e2Unit" placeholder="pg/mL"></div></div>
+<div class="grid"><div class="field"><label>DHT</label><input id="dht" type="number" min="0" step="any"></div>
+<div class="field"><label>Unidade DHT</label><input id="dhtUnit" placeholder="ng/dL"></div></div>
+<div class="grid"><div class="field"><label>Horas desde aplicação</label><input id="since" type="number" min="0" step="any"></div>
+<div class="field"><label>Ref TT</label><input id="refTotal" placeholder="300-1000"></div></div>
+<div class="grid"><div class="field"><label>Ref E2</label><input id="refE2"></div>
+<div class="field"><label>Ref DHT</label><input id="refDht"></div></div>
+<div class="field"><label>Ref SHBG</label><input id="refShbg"></div>
+<div class="field"><label>Composto</label><select id="labCompound"><option value="">Não informado</option><option>Propionato</option><option>Enantato</option><option>Cipionato</option><option>Undecilato</option><option>Durateston</option><option>Outro</option></select></div>
+<div class="field"><label>Observações</label><textarea id="labNote" rows="2"></textarea></div>
+<button class="primary" id="saveLab">Salvar e interpretar</button>
+<div id="labInterpretation" class="notice hidden"></div></div>
+<div class="card"><h2>Histórico TT</h2>
+<div class="chartwrap"><canvas id="labChart" width="680" height="240"></canvas></div>
+<div id="labList" class="list" style="margin-top:14px"></div></div>
+</section>
+<section class="view" id="model">
+<div class="card"><h2>Como funciona</h2>
+<div class="notice" style="margin-top:0">A curva começa genérica. Com aplicações e exames datados, o sistema calibra automaticamente.</div>
+<div class="item" style="margin-top:14px"><div><b>Dados científicos</b><small>Meia-vida e pico por éster</small></div></div>
+<div class="item"><div><b>Estimativa genérica</b><small>Baseada na dose e intervalo</small></div></div>
+<div class="item"><div><b>Calibração individual</b><small>Ajuste com seus exames</small></div></div>
+<div id="modelStats" class="muted" style="margin-top:16px">Adicione exames e aplicações.</div></div>
+</section>
+<section class="view" id="reminders">
+<div class="card"><h2>Lembrete</h2>
+<label class="check"><input type="checkbox" id="remEnabled"> Ativar lembrete</label>
+<div class="grid" style="margin-top:16px"><div class="field"><label>Data referência</label><input id="remDate" type="date"></div>
+<div class="field"><label>Intervalo (dias)</label><input id="remInterval" type="number" min="1" placeholder="14"></div></div>
+<div class="field"><label>Horário</label><input id="remTime" type="time" value="12:00"></div>
+<div class="notice">“BORA MONSTRÃO, HOJE É DIA DE TOMAR SUA TESTO”</div>
+<div class="actions" style="margin-top:14px"><button class="primary" id="saveReminder" style="flex:1">Salvar</button>
+<button class="secondary" id="testReminder">Testar</button></div>
+<p class="muted" id="remStatus" style="margin-top:12px">No app nativo as notificações funcionam em segundo plano.</p></div>
+</section>
+<section class="view" id="data">
+<div class="card"><h2>Backup</h2>
+<p class="muted">Dados ficam só neste dispositivo.</p>
+<div class="actions" style="margin-top:14px"><button class="primary" id="exportData" style="flex:1">Exportar</button>
+<label class="secondary" for="importFile" style="flex:1;text-align:center;cursor:pointer">Importar</label>
+<input id="importFile" type="file" accept="application/json" class="hidden"></div>
+<p class="muted" id="dataStatus" style="margin-top:10px"></p></div>
+<div class="card"><h2>Privacidade</h2>
+<p class="muted">Nada é enviado para servidores. Faça backup regularmente.</p>
+<button class="secondary" id="clearData" style="width:100%;margin-top:12px;color:var(--danger)">Apagar todos os dados</button></div>
+</section>
+</main>
+<nav class="bottom-nav">
+<button class="active" data-tab="calc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>Calculadora</button>
+<button data-tab="labs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3h6v4l4 8H5l4-8V3zM8 19h8"/></svg>Exames</button>
+<button data-tab="model"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 14l4-4 4 4 5-6"/></svg>Modelo</button>
+<button data-tab="reminders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Lembretes</button>
+<button data-tab="data"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 11l4 4 4-4M5 19h14"/></svg>Dados</button>
+</nav>
+<script>
+const $=id=>document.getElementById(id),today=new Date().toISOString().slice(0,10);
+let db={apps:[],labs:[],reminder:{enabled:false,date:today,interval:14,time:"12:00"}};
+try{db={...db,...JSON.parse(localStorage.getItem("testolab_v1")||"{}")}}catch(e){}
+function persist(){localStorage.setItem("testolab_v1",JSON.stringify(db));renderAll();drawProjection()}
+function num(id){const v=$(id).value.trim();return v===""?null:Number(v)}
+function fmt(n,d=2){return Number(n).toLocaleString("pt-BR",{maximumFractionDigits:d})}
+document.querySelectorAll(".bottom-nav button").forEach(btn=>{btn.addEventListener("click",()=>{document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.remove("active"));document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));btn.classList.add("active");$(btn.dataset.tab).classList.add("active");if(btn.dataset.tab==="labs")drawChart()})});
+$("compound").addEventListener("change",()=>{const d=$("compound").value==="durateston";$("singleFields").classList.toggle("hidden",d);$("durFields").classList.toggle("hidden",!d);$("calcResult").classList.add("hidden");drawProjection()});
+$("calculate").onclick=()=>{const v=$("compound").value,vol=v==="durateston"?num("dvolume"):num("volume");if(vol===null||vol<=0){alert("Informe volume > 0");return}let parts=[],total=0;if(v==="durateston"){for(const [id,name] of [["dprop","Propionato"],["dphen","Fenilpropionato"],["diso","Isocaproato"],["ddec","Decanoato"]]){const c=num(id);if(c===null||c<0){alert("Confira concentrações");return}const mg=c*vol;total+=mg;parts.push(name+": "+fmt(mg)+" mg")}}else{const c=num("concentration");if(c===null||c<=0){alert("Informe concentração");return}total=c*vol;parts.push("Quantidade: "+fmt(total)+" mg")}const box=$("calcResult");box.innerHTML=`<strong>${fmt(total)} mg</strong><p>Total calculado</p>${parts.map(x=>`<p>${x}</p>`).join("")}`;box.classList.remove("hidden");drawProjection()};
+$("appDate").value=today;$("labDate").value=today;$("remDate").value=db.reminder.date||today;
+$("saveApp").onclick=()=>{if(!$("appDate").value){alert("Informe a data");return}const c=$("compound").value,vol=c==="durateston"?num("dvolume"):num("volume");let mg=null;if(vol>0){if(c==="durateston")mg=["dprop","dphen","diso","ddec"].reduce((s,id)=>s+(num(id)||0),0)*vol;else if(num("concentration")!==null)mg=num("concentration")*vol}db.apps.push({date:$("appDate").value,time:$("appTime").value,compound:c,volume:vol,mg,note:$("appNote").value});$("appNote").value="";persist()};
+function parseRange(s){const m=(s||"").trim().replace(",",".").match(/^\s*(-?\d+(?:\.\d+)?)\s*[-–—a]\s*(-?\d+(?:\.\d+)?)\s*$/i);return m?[Number(m[1]),Number(m[2])]:null}
+function assess(value,range,label,unit){if(value===null)return null;if(!range)return `${label}: ${fmt(value)} ${unit}`;if(value<range[0])return `Abaixo: ${label} (${fmt(value)} ${unit})`;if(value>range[1])return `Acima: ${label} (${fmt(value)} ${unit})`;return `Dentro: ${label} (${fmt(value)} ${unit})`}
+function daysBetween(d1,d2){return Math.abs((new Date(d2)-new Date(d1))/86400000)}
+function findLastAppBefore(labDate){if(!db.apps.length)return null;return [...db.apps].filter(a=>a.date<=labDate).sort((a,b)=>b.date.localeCompare(a.date))[0]||null}
+function interpretLab(x){const f=[];const tt=assess(x.total,x.refTotal,"TT","ng/dL");if(tt)f.push(tt);const e2=assess(x.e2,x.refE2,"E2",x.e2Unit||"");if(e2)f.push(e2);const last=findLastAppBefore(x.date);if(last){const d=daysBetween(last.date,x.date);f.push(`Coleta ~${fmt(d,1)}d após aplicação (${last.date})`);if(d<2)f.push("Próximo do pico");else if(d>10)f.push("Tende ao vale")}else f.push("Sem aplicação anterior registrada");if(x.e2!=null&&x.e2>60)f.push("E2 relativamente alto");return f.length?f.join(" "):"Dados insuficientes"}
+$("saveLab").onclick=()=>{const total=num("total");if(total===null){alert("Informe TT");return}const x={date:$("labDate").value,time:$("labTime").value,total,free:num("free"),freeUnit:$("freeUnit").value,shbg:num("shbg"),e2:num("e2"),e2Unit:$("e2Unit").value,dht:num("dht"),dhtUnit:$("dhtUnit").value,since:num("since"),refTotal:parseRange($("refTotal").value),refE2:parseRange($("refE2").value),refDht:parseRange($("refDht").value),refShbg:parseRange($("refShbg").value),compound:$("labCompound").value,note:$("labNote").value};db.labs.push(x);$("labInterpretation").textContent=interpretLab(x);$("labInterpretation").classList.remove("hidden");persist();drawChart()};
+function renderAll(){const apps=$("appList");apps.innerHTML=db.apps.length?"":"<div class='empty'>Nenhuma aplicação</div>";[...db.apps].map((x,i)=>({...x,i})).reverse().forEach(x=>{const d=document.createElement("div");d.className="item";d.innerHTML=`<div><b>${x.date} • ${x.time||""}</b><small>${x.compound} • ${x.volume??"—"} mL • ${x.mg==null?"—":fmt(x.mg)+" mg"}</small></div><button data-i="${x.i}">×</button>`;d.querySelector("button").onclick=()=>{db.apps.splice(x.i,1);persist()};apps.appendChild(d)});const labs=$("labList");labs.innerHTML=db.labs.length?"":"<div class='empty'>Nenhum exame</div>";[...db.labs].map((x,i)=>({...x,i})).reverse().forEach(x=>{const d=document.createElement("div");d.className="item";d.innerHTML=`<div><b>${x.date} • TT ${fmt(x.total,0)}</b><small>${x.compound||""}</small></div><button data-i="${x.i}">×</button>`;d.querySelector("button").onclick=()=>{db.labs.splice(x.i,1);persist();drawChart()};labs.appendChild(d)});$("remEnabled").checked=!!db.reminder.enabled;$("remDate").value=db.reminder.date||today;$("remInterval").value=db.reminder.interval||14;$("remTime").value=db.reminder.time||"12:00";$("modelStats").textContent=(db.labs.length||db.apps.length)?`Aplicações: ${db.apps.length} • Exames: ${db.labs.length}`:"Adicione exames e aplicações"}
+const PK_DATA={propionato:{name:"Propionato",half:1,tmax:1,color:"#2dd4bf",peakPerMg:18},enantato:{name:"Enantato",half:5.5,tmax:1.5,color:"#60a5fa",peakPerMg:7},cipionato:{name:"Cipionato",half:6.5,tmax:2.5,color:"#c084fc",peakPerMg:6.5},undec:{name:"Undecilato",half:21,tmax:7,color:"#4ade80",peakPerMg:2.8},prop:{name:"Propionato",half:1,tmax:1,color:"#2dd4bf",peakPerMg:18},phen:{name:"Fenilpropionato",half:2.5,tmax:1.5,color:"#fbbf24",peakPerMg:10},iso:{name:"Isocaproato",half:4,tmax:2,color:"#fb923c",peakPerMg:8},dec:{name:"Decanoato",half:7.5,tmax:3,color:"#f472b6",peakPerMg:5.5}};
+function getSelectedDoses(){const v=$("compound").value,doses=[];if(v==="durateston"){const vol=num("dvolume")||0;for(const [id,key] of [["dprop","prop"],["dphen","phen"],["diso","iso"],["ddec","dec"]]){const c=num(id);if(c>0&&vol>0)doses.push({pk:PK_DATA[key],mg:c*vol})}}else{const map={propionato:"propionato",enantato:"enantato",cipionato:"cipionato",undec:"undec",custom:"enantato"};const key=map[v]||"enantato",conc=num("concentration"),vol=num("volume");if(conc>0&&vol>0)doses.push({pk:PK_DATA[key],mg:conc*vol})}return doses}
+function singleDoseContrib(age,pk,doseMg){if(age<0||doseMg<=0)return 0;const peak=pk.peakPerMg*doseMg;if(age<=pk.tmax){const r=age/pk.tmax;return peak*r*r}return peak*Math.pow(0.5,(age-pk.tmax)/pk.half)}
+function computeCalibration(){const points=[];for(const lab of db.labs){if(!Number.isFinite(lab.total)||lab.total<=0)continue;const last=findLastAppBefore(lab.date);if(!last||!last.mg)continue;const days=daysBetween(last.date,lab.date);if(days<0.2||days>21)continue;points.push({observed:lab.total,daysSince:days,doseMg:last.mg})}if(points.length<2)return null;let sumObs=0,sumExp=0;for(const p of points){const peak=7*p.doseMg,expected=peak*Math.pow(0.5,Math.max(0,p.daysSince-1.5)/5.5);if(expected>50){sumObs+=p.observed;sumExp+=expected}}if(sumExp<100)return null;return{scale:Math.max(0.3,Math.min(3,sumObs/sumExp)),n:points.length}}
+function drawProjection(){const svg=$("projectionSvg");if(!svg)return;const duration=Math.max(14,Math.min(365,Number($("duration")?.value)||90)),interval=Math.max(0.5,Math.min(90,Number($("interval")?.value)||7)),doses=getSelectedDoses(),calib=computeCalibration(),scale=calib?calib.scale:1;const L=55,R=682,T=22,B=248,plotW=R-L,plotH=B-T;const steps=Math.max(300,Math.min(1800,Math.ceil(duration*10)));const points=[];let maxVal=100;if(!doses.length){svg.innerHTML=`<text x="350" y="150" fill="#94a3b8" font-size="14" text-anchor="middle">Informe concentração e volume</text>`;$("projectionLegend").innerHTML="";$("projectionStatus").textContent="Preencha os campos";$("stabilityTable").innerHTML="";return}for(let i=0;i<=steps;i++){const day=duration*i/steps;let total=0;const nInj=Math.floor(day/interval)+1;for(let n=0;n<nInj;n++){const age=day-n*interval;for(const d of doses)total+=singleDoseContrib(age,d.pk,d.mg)*scale}points.push({day,val:total});if(total>maxVal)maxVal=total}const yMax=Math.max(800,Math.min(4000,Math.ceil(maxVal/200)*200));const x=d=>L+(d/duration)*plotW,y=v=>B-(v/yMax)*plotH;let out="";for(let i=0;i<=5;i++){const val=(yMax/5)*i,yy=y(val);out+=`<line x1="${L}" y1="${yy}" x2="${R}" y2="${yy}" stroke="#243044"/><text x="48" y="${yy+4}" fill="#94a3b8" font-size="11" text-anchor="end">${Math.round(val)}</text>`}for(let i=0;i<=4;i++){const day=duration*i/4,xx=x(day);out+=`<line x1="${xx}" y1="${T}" x2="${xx}" y2="${B}" stroke="#1e293b"/><text x="${xx}" y="269" fill="#94a3b8" font-size="11" text-anchor="middle">${Math.round(day)}d</text>`}out+=`<text x="${L}" y="14" fill="#94a3b8" font-size="11">ng/dL</text>`;const pts=points.map(p=>`${x(p.day).toFixed(1)},${y(p.val).toFixed(1)}`);const col=doses[0].pk.color;out+=`<polyline points="${pts.join(" ")}" fill="none" stroke="${col}" stroke-width="2.8"/>`;out+=`<polygon points="${pts[0]} ${pts.join(" ")} ${x(duration).toFixed(1)},${B} ${x(0).toFixed(1)},${B}" fill="${col}" fill-opacity="0.12"/>`;for(let n=0;n*interval<=duration;n++){const day=n*interval;let total=0;for(let j=0;j<=n;j++){const age=day-j*interval;for(const d of doses)total+=singleDoseContrib(age,d.pk,d.mg)*scale}out+=`<circle cx="${x(day)}" cy="${y(total)}" r="3.2" fill="${col}" stroke="#080d16"/>`}out+=`<line x1="${L}" y1="${B}" x2="${R}" y2="${B}" stroke="#64748b"/>`;svg.innerHTML=out;const legend=$("projectionLegend");if(doses.length===1){const d=doses[0];legend.innerHTML=`<div class="muted"><b>${d.pk.name}</b> — ${fmt(d.mg)} mg • meia-vida ${fmt(d.pk.half,1)}d</div>`}else{legend.innerHTML=doses.map(d=>`<div class="muted">${d.pk.name}: ${fmt(d.mg)} mg</div>`).join("")}const totalMg=doses.reduce((s,d)=>s+d.mg,0);$("projectionStatus").innerHTML=`Dose: <b>${fmt(totalMg)} mg</b> • Intervalo: <b>${fmt(interval,1)}d</b> • ${calib?`<b>Calibrado (${calib.n} exames, fator ${fmt(calib.scale,2)})</b>`:"Modelo genérico"}`;const troughs=points.filter(p=>{const r=p.day%interval;return r>interval-0.3||r<0.05}).map(p=>p.val);const trough=troughs.length?Math.min(...troughs):0;$("stabilityTable").innerHTML=`<div style="font-size:13px;font-weight:700;margin-bottom:6px">Resumo</div><div class="muted">Pico ~<b>${fmt(maxVal,0)}</b> • Vale ~<b>${fmt(trough,0)}</b> ng/dL</div>`}
+["duration","interval","concentration","volume","dvolume","dprop","dphen","diso","ddec"].forEach(id=>{const el=$(id);if(el)el.addEventListener("input",drawProjection)});
+function drawChart(){const c=$("labChart");if(!c)return;const ctx=c.getContext("2d"),w=c.width,h=c.height;ctx.clearRect(0,0,w,h);ctx.fillStyle="#94a3b8";ctx.font="12px system-ui";const arr=[...db.labs].filter(x=>Number.isFinite(x.total)).sort((a,b)=>a.date.localeCompare(b.date));if(!arr.length){ctx.fillText("Adicione exames",18,110);return}const max=Math.max(100,...arr.map(x=>x.total))*1.15,left=48,right=w-16,top=16,bottom=h-32;ctx.strokeStyle="#243044";for(let i=0;i<=4;i++){const y=bottom-(bottom-top)*i/4;ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();ctx.fillText(String(Math.round(max*i/4)),4,y+4)}const xs=arr.map((x,i)=>left+(arr.length===1?(right-left)/2:i*(right-left)/(arr.length-1)));ctx.strokeStyle="#2dd4bf";ctx.lineWidth=3;ctx.beginPath();arr.forEach((x,i)=>{const y=bottom-(x.total/max)*(bottom-top);i?ctx.lineTo(xs[i],y):ctx.moveTo(xs[i],y)});ctx.stroke();arr.forEach((x,i)=>{const y=bottom-(x.total/max)*(bottom-top);ctx.fillStyle="#2dd4bf";ctx.beginPath();ctx.arc(xs[i],y,5,0,Math.PI*2);ctx.fill();ctx.fillStyle="#f1f5f9";ctx.fillText(fmt(x.total,0),xs[i]-14,y-10)})}
+$("saveReminder").onclick=async()=>{const interval=Number($("remInterval").value);if($("remEnabled").checked&&(!$("remDate").value||!Number.isInteger(interval)||interval<1)){alert("Informe data e intervalo");return}db.reminder={enabled:$("remEnabled").checked,date:$("remDate").value,interval,time:$("remTime").value};persist();if(db.reminder.enabled&&"Notification"in window&&Notification.permission==="default"){try{await Notification.requestPermission()}catch(e){}}$("remStatus").textContent="Salvo. No nativo funciona em segundo plano."};
+$("testReminder").onclick=async()=>{if(!("Notification"in window)){alert("Não disponível");return}let p=Notification.permission;if(p==="default")p=await Notification.requestPermission();if(p==="granted")new Notification("TestoLab",{body:"BORA MONSTRÃO, HOJE É DIA DE TOMAR SUA TESTO"});else alert("Permissão negada")};
+$("exportData").onclick=()=>{const blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="testolab-backup-"+today+".json";a.click()};
+$("importFile").onchange=async e=>{try{const obj=JSON.parse(await e.target.files[0].text());if(!Array.isArray(obj.apps)||!Array.isArray(obj.labs))throw Error();if(confirm("Substituir dados?")){db=obj;persist();$("dataStatus").textContent="Importado"}}catch(err){alert("Arquivo inválido")}e.target.value=""};
+$("clearData").onclick=()=>{if(confirm("Apagar tudo?")){db={apps:[],labs:[],reminder:{enabled:false,date:today,interval:14,time:"12:00"}};persist();$("dataStatus").textContent="Apagado"}};
+renderAll();drawProjection();
+</script>
+</body>
+</html>
