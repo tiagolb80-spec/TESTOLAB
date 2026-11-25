@@ -65,12 +65,12 @@ async function pubmedEvidence() {
   const abstractUrl = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=" + ids.join(",");
   const abstractResponse = await fetch(abstractUrl, { headers: { "User-Agent": "TestoLab/1.0" } });
   const xml = abstractResponse.ok ? await abstractResponse.text() : "";
-  const decode = value => value.replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/\\s+/g, " ").trim();
-  const articles = [...xml.matchAll(/<PubmedArticle>([\\s\\S]*?)<\\/PubmedArticle>/g)].map(m => m[1]);
+  const decode = value => value.replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/\s+/g, " ").trim();
+  const articles = [...xml.matchAll(/<PubmedArticle>([\s\S]*?)<\/PubmedArticle>/g)].map(m => m[1]);
   return ids.map((id, index) => {
     const item = summary?.result?.[id] || {};
     const article = articles[index] || "";
-    const abstractParts = [...article.matchAll(/<AbstractText[^>]*>([\\s\\S]*?)<\\/AbstractText>/g)].map(m => decode(m[1]));
+    const abstractParts = [...article.matchAll(/<AbstractText[^>]*>([\s\S]*?)<\/AbstractText>/g)].map(m => decode(m[1]));
     return {
       title: String(item.title || "Artigo no PubMed").slice(0, 350),
       journal: String(item.fulljournalname || item.source || "").slice(0, 150),
